@@ -131,7 +131,7 @@ def find_matches(pdf_lines: List[str], excel_values: List[str]) -> List[str]:
     except Exception as e:
         st.error(f"Error writing check files: {str(e)}")
     for val in excel_values:
-        if any(val in line for line in pdf_lines):
+        if any(val.lower() in line.lower() for line in pdf_lines):
             matches.append(val)
     return matches
 
