@@ -27,6 +27,7 @@ if 'excel_columns' not in st.session_state:
 
 # Comparison conditions - easily extensible
 COMPARISON_CONDITIONS = {
+    "Year Pattern (remove space and /)": lambda text: bool(re.search(r"/\d{4}", text)),
     "/YYYY (4-digit year)": lambda text: bool(re.search(r"/\d{4}", text)),
     # Add more conditions here in the future
     # "Email pattern": lambda text: bool(re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)),
@@ -130,9 +131,21 @@ def find_matches(pdf_lines: List[str], excel_values: List[str]) -> List[str]:
                 f_pdf.write(f"{line}\n")
     except Exception as e:
         st.error(f"Error writing check files: {str(e)}")
+    condition_name = st.selectbox(
+        "Choose condition to filter PDF text:",
+        list(COMPARISON_CONDITIONS.keys()),
+        key="condition_input"
+    )
     for val in excel_values:
-        if any(val.lower() in line.lower() for line in pdf_lines):
-            matches.append(val)
+        if condition_name == "Year Pattern (remove space and /)":
+            # Normalize by removing spaces and standardizing slashes
+            normalized_val = val.lower().replace(" ", "").replace("/", "")
+            if any(normalized_val in line.lower().replace(" ", "").replace("/", "") for line in pdf_lines):
+                matches.append(val)
+        else:
+            # Original matching logic
+            if any(val.lower() in line.lower() for line in pdf_lines):
+                matches.append(val)
     return matches
 
 def create_output_file(matches: List[str]) -> bool:
